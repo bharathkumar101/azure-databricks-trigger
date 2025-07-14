@@ -17,6 +17,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     )
 
     return func.HttpResponse(
-        f"Triggered Databricks job: {response.status_code}",
+        f"Trigger Databricks job: {response.status_code}",
         status_code=200
     )
