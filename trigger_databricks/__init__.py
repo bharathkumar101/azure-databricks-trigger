@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 import azure.functions as func
 import json
 import requests
@@ -38,6 +39,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     except Exception as e:
         logging.error(f"Error occurred: {str(e)}")
+        logging.error(f"Error occurred: {str(e)}")
+        logging.error(traceback.format_exc())
         return func.HttpResponse(
             f"Function failed: {str(e)}",
             status_code=500
