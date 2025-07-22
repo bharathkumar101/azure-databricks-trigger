@@ -7,6 +7,11 @@
       "direction": "in",
       "name": "req",
       "methods": [ "post", "get" ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
     }
   ]
 }
