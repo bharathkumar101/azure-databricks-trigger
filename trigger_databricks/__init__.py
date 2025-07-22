@@ -2,17 +2,16 @@ import logging
 import os
 import azure.functions as func
 import json
-import requests
-import traceback
+import urllib.request
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Function triggered.')
 
     try:
-        # Parse request body
+        # Parse JSON body
         req_body = req.get_json()
-        logging.info(f"Request body: {req_body}")
-        # STEP 1: Event Grid validation handshake
+
+        # STEP 1: Handle Event Grid webhook validation handshake
         if "validationCode" in req_body:
             logging.info("Validation handshake received.")
             return func.HttpResponse(
@@ -21,37 +20,34 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
 
-        # STEP 2: Trigger Databricks job
+        # STEP 2: Trigger Databricks Job
         databricks_host = os.environ.get("DATABRICKS_HOST")
         databricks_token = os.environ.get("DATABRICKS_TOKEN")
         job_id = os.environ.get("DATABRICKS_JOB_ID")
 
-        if not databricks_host or not databricks_token or not job_id:
-            raise ValueError("One or more environment variables are missing.")
+        url = f"{databricks_host}/api/2.1/jobs/run-now"
+        payload = json.dumps({"job_id": job_id}).encode("utf-8")
 
-        logging.info(f"Triggering Databricks job ID: {job_id} at {databricks_host}")
-
-        response = requests.post(
-            f"{databricks_host}/api/2.1/jobs/run-now",
-            headers={"Authorization": f"Bearer {databricks_token}"},
-            json={"job_id": int(job_id)}
+        request = urllib.request.Request(
+            url,
+            data=payload,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {databricks_token}"
+            }
         )
-        logging.info(f"Databricks response: {response.status_code} - {response.text}")
 
-        if response.status_code >= 400:
+        with urllib.request.urlopen(request) as response:
+            response_body = response.read().decode("utf-8")
+            logging.info(f"Databricks response: {response_body}")
             return func.HttpResponse(
-                f"Databricks job trigger failed: {response.text}",
-                status_code=response.status_code
+                f"Triggered Databricks job: {response.status}",
+                status_code=200
             )
-
-        return func.HttpResponse(
-            f"Databricks job triggered successfully: {response.status_code}",
-            status_code=200
-        )
 
     except Exception as e:
         logging.error(f"Error occurred: {str(e)}")
-        logging.error(traceback.format_exc())
         return func.HttpResponse(
             f"Function failed: {str(e)}",
             status_code=500
