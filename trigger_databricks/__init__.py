@@ -19,6 +19,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=200,
                 mimetype="application/json"
             )
+        
+        if "validationUrl" in req_body:
+            validation_url = req_body["validationUrl"]
+            logging.info(f"Validation handshake (GET to validationUrl) required: {validation_url}")
+            try:
+                with urllib.request.urlopen(validation_url) as response:
+                    logging.info("ValidationUrl GET call successful.")
+                    return func.HttpResponse("Validation GET completed", status_code=200)
+            except Exception as e:
+                logging.error(f"ValidationUrl GET failed: {str(e)}")
+                return func.HttpResponse("ValidationUrl GET failed", status_code=500)
 
         # STEP 2: Trigger Databricks Job
         databricks_host = os.environ.get("DATABRICKS_HOST")
