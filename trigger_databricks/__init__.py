@@ -12,7 +12,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Parse request body
         req_body = req.get_json()
         logging.info(f"Request body: {req_body}")
-
         # STEP 1: Event Grid validation handshake
         if "validationCode" in req_body:
             logging.info("Validation handshake received.")
@@ -37,7 +36,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             headers={"Authorization": f"Bearer {databricks_token}"},
             json={"job_id": int(job_id)}
         )
-
         logging.info(f"Databricks response: {response.status_code} - {response.text}")
 
         if response.status_code >= 400:
