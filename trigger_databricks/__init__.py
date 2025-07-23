@@ -8,28 +8,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Function triggered.')
 
     try:
-        # Parse JSON body
-        req_body = req.get_json()
+        events = req.get_json()
 
-        # STEP 1: Handle Event Grid webhook validation handshake
-        if "validationCode" in req_body:
-            logging.info("Validation handshake received.")
-            return func.HttpResponse(
-                json.dumps({"validationResponse": req_body["validationCode"]}),
-                status_code=200,
-                mimetype="application/json"
-            )
-        
-        if "validationUrl" in req_body:
-            validation_url = req_body["validationUrl"]
-            logging.info(f"Validation handshake (GET to validationUrl) required: {validation_url}")
-            try:
-                with urllib.request.urlopen(validation_url) as response:
-                    logging.info("ValidationUrl GET call successful.")
-                    return func.HttpResponse("Validation GET completed", status_code=200)
-            except Exception as e:
-                logging.error(f"ValidationUrl GET failed: {str(e)}")
-                return func.HttpResponse("ValidationUrl GET failed", status_code=500)
+        # STEP 1: Handle Event Grid webhook validation
+        for event in events:
+            if event.get("eventType") == "Microsoft.EventGrid.SubscriptionValidationEvent":
+                validation_code = event["data"]["validationCode"]
+                logging.info("Validation handshake received.")
+                return func.HttpResponse(
+                    json.dumps({"validationResponse": validation_code}),
+                    status_code=200,
+                    mimetype="application/json"
+                )
 
         # STEP 2: Trigger Databricks Job
         databricks_host = os.environ.get("DATABRICKS_HOST")
