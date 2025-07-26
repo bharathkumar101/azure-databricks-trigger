@@ -20,7 +20,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     status_code=200,
                     mimetype="application/json"
                 )
-
+        
+        print("test")
         # STEP 2: Trigger Databricks Job
         databricks_host = os.environ.get("DATABRICKS_HOST")
         databricks_token = os.environ.get("DATABRICKS_TOKEN")
